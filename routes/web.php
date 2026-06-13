@@ -12,3 +12,5 @@ Route::get('/products', [ProductController::class, 'index']);
 
 // New Route to handle saving the product from the form
 Route::post('/products', [ProductController::class, 'store']);
+// Route for the user shop page
+Route::get('/shop', [ProductController::class, 'shop']);

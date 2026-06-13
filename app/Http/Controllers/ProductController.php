@@ -3,37 +3,40 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // Display form and table
-    public function index()
-    {
+    public function index() {
         $products = Product::all();
-        return view('products', compact('products'));
+        $orders = Order::all();
+        return view('products', compact('products', 'orders'));
     }
 
-    // Save new product to the database
-    public function store(Request $request)
-    {
-        // Validate incoming data
-        $request->validate([
-            'name' => 'required',
-            'description' => 'required',
-            'price' => 'required|numeric',
-            'stock' => 'required|integer',
-        ]);
+    public function shop() {
+        $products = Product::all();
+        return view('shop', compact('products'));
+    }
 
-        // Create and save the product
-        Product::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'stock' => $request->stock,
-        ]);
+    public function addToCart($id) {
+        $product = Product::findOrFail($id);
+        $cart = session()->get('cart', []);
+        $cart[$id] = ["name" => $product->name, "quantity" => 1, "price" => $product->price];
+        session()->put('cart', $cart);
+        return redirect('/shop');
+    }
 
-        // Redirect back to the products page to see the updated list
-        return redirect('/products');
+    public function checkout() {
+        $cart = session()->get('cart', []);
+        foreach ($cart as $item) {
+            Order::create([
+                'product_name' => $item['name'],
+                'quantity' => $item['quantity'],
+                'total_price' => $item['price'] * $item['quantity']
+            ]);
+        }
+        session()->forget('cart');
+        return redirect('/shop');
     }
 }
